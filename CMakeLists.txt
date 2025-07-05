@@ -107,8 +107,25 @@ endif()
 
 # Platform-specific linking
 if(WIN32)
-  set(WINDOWS_LIBS "uiautomationcore.lib" "oleaut32.lib" "ole32.lib")
+  set(WINDOWS_LIBS 
+    "uiautomationcore.lib" 
+    "oleaut32.lib" 
+    "ole32.lib"
+    "uuid.lib"
+    "user32.lib"
+    "kernel32.lib"
+    "propsys.lib"
+    "advapi32.lib"
+  )
   target_link_libraries(${SRAL_TARGET} ${WINDOWS_LIBS})
+  
+  # Add Windows SDK version requirement for UIA functions
+  if(MSVC)
+    target_compile_definitions(${SRAL_TARGET} PRIVATE 
+      WINVER=0x0A00 
+      _WIN32_WINNT=0x0A00
+    )
+  endif()
 elseif(APPLE)
   set(APPLE_FRAMEWORKS
     "-framework AppKit"
