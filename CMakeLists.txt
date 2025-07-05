@@ -12,6 +12,7 @@ option(BUILD_EXAMPLES "Build example executables" ON)
 # Windows-specific options
 if(WIN32)
   option(SRAL_USE_STATIC_CRT "Use static C runtime library (/MT)" OFF)
+  option(SRAL_ENABLE_UIA "Enable UI Automation support" ON)
 endif()
 
 # Configure MSVC runtime library
@@ -48,10 +49,13 @@ set(SRAL_WINDOWS_SOURCES
   "Dep/fsapi.h" "Dep/fsapi.c"
   "Dep/nvda_control.h" "Dep/nvda_control.c"
   "SRC/Jaws.h" "SRC/Jaws.cpp"
-  "SRC/UIA.cpp" "SRC/UIA.h"
-  "Dep/UIAProvider.h" "Dep/UIAProvider.cpp"
   "Dep/wasapi.h" "Dep/wasapi.cpp"
   "SRC/ZDSR.h" "SRC/ZDSR.cpp"
+)
+
+set(SRAL_WINDOWS_UIA_SOURCES
+  "SRC/UIA.cpp" "SRC/UIA.h"
+  "Dep/UIAProvider.h" "Dep/UIAProvider.cpp"
 )
 
 set(SRAL_APPLE_SOURCES
@@ -69,6 +73,9 @@ add_library(${PROJECT_NAME}_obj OBJECT ${SRAL_COMMON_SOURCES})
 # Add platform-specific sources
 if(WIN32)
   target_sources(${PROJECT_NAME}_obj PRIVATE ${SRAL_WINDOWS_SOURCES})
+  if(SRAL_ENABLE_UIA)
+    target_sources(${PROJECT_NAME}_obj PRIVATE ${SRAL_WINDOWS_UIA_SOURCES})
+  endif()
 elseif(APPLE)
   # Enable Objective-C++ for macOS
   enable_language(OBJCXX)
@@ -91,6 +98,7 @@ target_include_directories(${PROJECT_NAME}_obj PUBLIC ${INCLUDES})
 # Configure compile definitions for exports
 target_compile_definitions(${PROJECT_NAME}_obj PRIVATE
   $<$<BOOL:${WIN32}>:SRAL_EXPORT>
+  $<$<AND:$<BOOL:${WIN32}>,$<BOOL:${SRAL_ENABLE_UIA}>>:SRAL_ENABLE_UIA>
 )
 
 # Create libraries based on BUILD_SHARED_LIBS option
@@ -108,19 +116,25 @@ endif()
 # Platform-specific linking
 if(WIN32)
   set(WINDOWS_LIBS 
-    "uiautomationcore.lib" 
-    "oleaut32.lib" 
-    "ole32.lib"
-    "uuid.lib"
     "user32.lib"
     "kernel32.lib"
-    "propsys.lib"
     "advapi32.lib"
   )
+  
+  if(SRAL_ENABLE_UIA)
+    list(APPEND WINDOWS_LIBS
+      "uiautomationcore.lib" 
+      "oleaut32.lib" 
+      "ole32.lib"
+      "uuid.lib"
+      "propsys.lib"
+    )
+  endif()
+  
   target_link_libraries(${SRAL_TARGET} ${WINDOWS_LIBS})
   
   # Add Windows SDK version requirement for UIA functions
-  if(MSVC)
+  if(MSVC AND SRAL_ENABLE_UIA)
     target_compile_definitions(${SRAL_TARGET} PRIVATE 
       WINVER=0x0A00 
       _WIN32_WINNT=0x0A00
@@ -198,6 +212,7 @@ if(WIN32)
     endif()
   endif()
   message(STATUS "  Static CRT option: ${SRAL_USE_STATIC_CRT}")
+  message(STATUS "  UIA support: ${SRAL_ENABLE_UIA}")
 endif()
 if(CMAKE_BUILD_TYPE)
   message(STATUS "  Build type: ${CMAKE_BUILD_TYPE}")

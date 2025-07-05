@@ -22,6 +22,7 @@ SRAL uses CMake for cross-platform building with flexible configuration options.
 **Windows-only options:**
 
 - `SRAL_USE_STATIC_CRT` - Use static C runtime library (/MT). Default: OFF
+- `SRAL_ENABLE_UIA` - Enable UI Automation support. Default: ON
 
 ### Quick Build
 
@@ -55,6 +56,10 @@ cmake --build build --config Release
 
 # Static library with dynamic CRT (/MD) - for linking with /MD projects  
 cmake . -B build -DBUILD_SHARED_LIBS=OFF -DSRAL_USE_STATIC_CRT=OFF
+cmake --build build --config Release
+
+# Disable UIA support to avoid linking issues
+cmake . -B build -DBUILD_SHARED_LIBS=OFF -DSRAL_ENABLE_UIA=OFF
 cmake --build build --config Release
 ```
 
