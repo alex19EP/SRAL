@@ -10,18 +10,77 @@ SRAL is supported on Windows, MacOS and Linux platforms.
 See how to use SRAL in Include/SRAL.h
 
 ## Compilation
-SRAL can build using CMake into two libraries, static and dynamic.
-Run these commands
-```
+
+SRAL uses CMake for cross-platform building with flexible configuration options.
+
+### Build Options
+
+- `BUILD_SHARED_LIBS` - Build shared library (ON) or static library (OFF). Default: ON
+- `BUILD_TESTING` - Build test executables. Default: ON  
+- `BUILD_EXAMPLES` - Build example programs. Default: ON
+
+**Windows-only options:**
+
+- `SRAL_USE_STATIC_CRT` - Use static C runtime library (/MT). Default: OFF
+
+### Quick Build
+
+**Shared library (default):**
+
+```bash
 cmake . -B build
 cmake --build build --config Release
 ```
 
-You will also have an executable test to test the SRAL.
+**Static library only:**
 
+```bash
+cmake . -B build -DBUILD_SHARED_LIBS=OFF
+cmake --build build --config Release
+```
 
-# Warning
-To build on Linux you need to install libspeechd-dev, libbrlapi-dev and brltty
+**Minimal build (static library, no tests/examples):**
+
+```bash
+cmake . -B build -DBUILD_SHARED_LIBS=OFF -DBUILD_TESTING=OFF -DBUILD_EXAMPLES=OFF
+cmake --build build --config Release
+```
+
+**Windows-specific builds:**
+
+```bash
+# Static library with static CRT (/MT) - for static linking
+cmake . -B build -DBUILD_SHARED_LIBS=OFF -DSRAL_USE_STATIC_CRT=ON
+cmake --build build --config Release
+
+# Static library with dynamic CRT (/MD) - for linking with /MD projects  
+cmake . -B build -DBUILD_SHARED_LIBS=OFF -DSRAL_USE_STATIC_CRT=OFF
+cmake --build build --config Release
+```
+
+### Build Outputs
+
+- **Shared build**: `libSRAL.so` (Linux), `SRAL.dll` (Windows), `libSRAL.dylib` (macOS)
+- **Static build**: `libSRAL.a` (Linux), `SRAL.lib` (Windows)
+- **Test executable**: `SRAL_test` (if BUILD_TESTING=ON)
+- **Headers**: `Include/SRAL.h`
+
+### Platform Requirements
+
+**Linux:**
+
+```bash
+sudo apt install libspeechd-dev libbrlapi-dev brltty pkg-config
+```
+
+**Windows:**
+
+- Visual Studio 2019 or newer
+- Windows SDK
+
+**macOS:**
+
+- Xcode command line tools
 
 
 ## Support for NVDAControlEx
@@ -32,11 +91,12 @@ SRAL supports the [NVDAControlEx](https://github.com/m1maker/NVDAControlEx) add-
 
 To use the SRAL API in a C/C++ project, you need a statically linked or dynamically imported SRAL library, as well as a SRAL.h file with function declarations.
 If you use SRAL as a static library for Windows, you need to define SRAL_STATIC in the SRAL.h before the include
-```
+
+```c
 #define SRAL_STATIC
 #include <SRAL.h>
 ```
 
 ## Additional info
-For [NVDA](https://github.com/nvaccess/nvda) screen reader, you need to download the [Controller Client](https://www.nvaccess.org/files/nvda/releases/stable/). We don't support old client V 1.
 
+For [NVDA](https://github.com/nvaccess/nvda) screen reader, you need to download the [Controller Client](https://www.nvaccess.org/files/nvda/releases/stable/). We don't support old client V 1.
